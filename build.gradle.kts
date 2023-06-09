@@ -4,11 +4,15 @@ plugins {
     id("org.jetbrains.intellij") version "1.13.3"
 }
 
-group = "com.example"
+group = "com.georgynet"
 version = "1.0-SNAPSHOT"
 
 repositories {
     mavenCentral()
+}
+
+dependencies {
+    implementation("com.konghq:unirest-java:3.14.2")
 }
 
 // Configure Gradle IntelliJ Plugin
