@@ -9,8 +9,6 @@ import kong.unirest.json.JSONObject
 
 @Service(Service.Level.PROJECT)
 class BitBucketService(project: Project) {
-    fun getRandomNumber() = (1..100).random()
-
     fun getPullRequestList(workspaceName:String, repositoryName:String): JSONObject? {
         try {
             val apiToken = ConfigReader().getToken()

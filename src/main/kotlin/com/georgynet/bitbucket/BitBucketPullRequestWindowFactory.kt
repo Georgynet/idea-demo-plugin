@@ -1,35 +1,28 @@
 package com.georgynet.bitbucket
 
 import com.georgynet.bitbucket.services.BitBucketService
-import com.intellij.icons.AllIcons
-import com.intellij.openapi.actionSystem.AnActionEvent
+import com.georgynet.bitbucket.services.ConfigReader
+import com.georgynet.bitbucket.ui.PullRequestToolWindow
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.DumbAware
-import com.intellij.openapi.project.DumbAwareAction
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
-import com.intellij.openapi.wm.ex.ToolWindowEx
 import com.intellij.ui.ScrollPaneFactory
 import com.intellij.ui.components.JBPanel
 import com.intellij.ui.content.Content
 import com.intellij.ui.content.ContentFactory
-import com.intellij.ui.dsl.builder.panel
-import com.intellij.ui.dsl.gridLayout.HorizontalAlign
-import kong.unirest.json.JSONArray
-import kong.unirest.json.JSONObject
 import java.awt.BorderLayout
 import javax.swing.BorderFactory
 
 class BitBucketPullRequestWindowFactory : ToolWindowFactory, DumbAware {
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
-        val tw = toolWindow as ToolWindowEx?
-        val width = tw!!.component.width
-        val height = tw!!.component.height
-
         val bitbucketWindowContent = BitBucketWindowContent(toolWindow)
+
+        val config = ConfigReader()
+
         val content: Content = ContentFactory.getInstance().createContent(
-            bitbucketWindowContent.getContent("test", width, height),
+            bitbucketWindowContent.getContent(config.getRepositoryName(), config.getWorkspaceName()),
             null,
             false
         )
@@ -38,63 +31,17 @@ class BitBucketPullRequestWindowFactory : ToolWindowFactory, DumbAware {
 
     private class BitBucketWindowContent(toolWindow: ToolWindow) {
         private val bitBucketService = toolWindow.project.service<BitBucketService>()
-        fun getContent(repositoryName:String, width:Int, height:Int) = JBPanel<JBPanel<*>>().apply {
-            val prPanel = panel {
-                row {
-                    val action = object : DumbAwareAction("Refresh PRs", "Refresh PRs", AllIcons.Actions.Refresh) {
-                        override fun actionPerformed(e: AnActionEvent) {
-                        }
-                    }
-                    actionButton(action)
-                }
 
-                row("Repository:") {
-                    label(
-                        repositoryName
-                    )
-                }
+        fun getContent(repositoryName:String, workspaceName:String) = JBPanel<JBPanel<*>>().apply {
+            val prValues = bitBucketService.getPullRequestList(workspaceName, repositoryName)
 
-                val prValues = bitBucketService.getPullRequestList("georgynet", repositoryName)
-                if (prValues is JSONObject) {
-                    val pullRequests = prValues.getJSONArray("values")
-
-                    if (pullRequests is JSONArray) {
-                        for (i in 1..5) {
-                            for (pullRequest in pullRequests) {
-                                if (pullRequest is JSONObject) {
-                                    group("PR: " + pullRequest.get("title").toString()) {
-                                        row {
-                                            browserLink(
-                                                "Open in browser",
-                                                pullRequest.getJSONObject("links").getJSONObject("html").get("href").toString()
-                                            )
-                                        }
-
-                                        row("Author:") {
-                                            label(
-                                                pullRequest.getJSONObject("author").get("display_name").toString()
-                                            )
-                                            text("<img width=32 src='" + pullRequest.getJSONObject("author").getJSONObject("links").getJSONObject("avatar").get("href").toString() + "'>")
-                                                .horizontalAlign(HorizontalAlign.RIGHT)
-                                        }
-
-                                        row("State:") {
-                                            label(
-                                                pullRequest.get("state").toString()
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+            val pullRequestToolWindow = PullRequestToolWindow()
+            val prPanel = pullRequestToolWindow.getPanelContent(repositoryName, prValues)
 
             layout = BorderLayout()
 
             val scrollPane = ScrollPaneFactory.createScrollPane(prPanel, false)
-            scrollPane.border = BorderFactory.createEmptyBorder(20, 20, 20, 20)
+            scrollPane.border = BorderFactory.createEmptyBorder(0, 20, 20, 20)
             scrollPane.verticalScrollBar.unitIncrement = 16
             add(scrollPane)
         }
