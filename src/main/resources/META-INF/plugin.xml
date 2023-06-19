@@ -29,5 +29,14 @@
     <extensions defaultExtensionNs="com.intellij">
         <toolWindow id="PullRequests" secondary="true" anchor="right"
                     factoryClass="com.georgynet.bitbucket.BitBucketPullRequestWindowFactory"/>
+
+        <projectConfigurable
+                instance="com.georgynet.bitbucket.settings.BitbucketSettings">
+        </projectConfigurable>
     </extensions>
+    <project-components>
+        <component>
+            <implementation-class>com.georgynet.bitbucket.components.BitBucketComponent</implementation-class>
+        </component>
+    </project-components>
 </idea-plugin>

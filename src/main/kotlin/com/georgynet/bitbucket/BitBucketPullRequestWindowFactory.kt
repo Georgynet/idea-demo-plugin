@@ -1,7 +1,7 @@
 package com.georgynet.bitbucket
 
+import com.georgynet.bitbucket.components.BitBucketComponent
 import com.georgynet.bitbucket.services.BitBucketService
-import com.georgynet.bitbucket.services.ConfigReader
 import com.georgynet.bitbucket.ui.PullRequestToolWindow
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.DumbAware
@@ -19,10 +19,10 @@ class BitBucketPullRequestWindowFactory : ToolWindowFactory, DumbAware {
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
         val bitbucketWindowContent = BitBucketWindowContent(toolWindow)
 
-        val config = ConfigReader()
+        val config = BitBucketComponent.getInstance(project)
 
         val content: Content = ContentFactory.getInstance().createContent(
-            bitbucketWindowContent.getContent(config.getRepositoryName(), config.getWorkspaceName()),
+            bitbucketWindowContent.getContent(config.repository, config.workspace),
             null,
             false
         )
